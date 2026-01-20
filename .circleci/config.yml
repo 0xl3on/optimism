@@ -1180,7 +1180,6 @@ jobs:
             fi
 
             # Let them cook!
-            KONA_VERSION=$(jq -r .version kona/version.json) \
             docker buildx bake \
               --progress plain \
               --builder=buildx-build \
