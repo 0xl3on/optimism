@@ -268,6 +268,8 @@ type ExecutionPayload struct {
 	ExcessBlobGas *Uint64Quantity `json:"excessBlobGas,omitempty"`
 	// Nil if not present (Bedrock, Canyon, Delta, Ecotone, Fjord, Granite, Holocene)
 	WithdrawalsRoot *common.Hash `json:"withdrawalsRoot,omitempty"`
+
+	OPContainer *types.OPContainer `json:"opContainer,omitempty"`
 }
 
 func (p *ExecutionPayload) CheckEqual(o *ExecutionPayload) error {
@@ -358,6 +360,20 @@ func (p *ExecutionPayload) CheckEqual(o *ExecutionPayload) error {
 	if p.WithdrawalsRoot != nil && *p.WithdrawalsRoot != *o.WithdrawalsRoot {
 		return fmt.Errorf("WithdrawalsRoot mismatch: %v != %v", *p.WithdrawalsRoot, *o.WithdrawalsRoot)
 	}
+	if (p.OPContainer == nil) != (o.OPContainer == nil) {
+		return fmt.Errorf("OPContainer nil mismatch")
+	}
+	if p.OPContainer != nil && len(p.OPContainer.MetadataOPGas) != len(o.OPContainer.MetadataOPGas) {
+		return fmt.Errorf("OPContainer MetadataOPGas length mismatch: %d != %d", len(p.OPContainer.MetadataOPGas), len(o.OPContainer.MetadataOPGas))
+	}
+	for i := range p.OPContainer.MetadataOPGas {
+		if p.OPContainer.MetadataOPGas[i].FromAddress != o.OPContainer.MetadataOPGas[i].FromAddress {
+			return fmt.Errorf("OPContainer MetadataOPGas[%d] FromAddress mismatch: %v != %v", i, p.OPContainer.MetadataOPGas[i].FromAddress, o.OPContainer.MetadataOPGas[i].FromAddress)
+		}
+		if p.OPContainer.MetadataOPGas[i].OPGasRefund != o.OPContainer.MetadataOPGas[i].OPGasRefund {
+			return fmt.Errorf("OPContainer MetadataOPGas[%d] OPGasRefund mismatch: %v != %v", i, p.OPContainer.MetadataOPGas[i].OPGasRefund, o.OPContainer.MetadataOPGas[i].OPGasRefund)
+		}
+	}
 	return nil
 }
 
@@ -365,9 +381,9 @@ func (payload *ExecutionPayload) ID() BlockID {
 	return BlockID{Hash: payload.BlockHash, Number: uint64(payload.BlockNumber)}
 }
 
-func (payload *ExecutionPayload) String() string {
-	return fmt.Sprintf("payload(%s)", payload.ID())
-}
+// func (payload *ExecutionPayload) String() string {
+// 	return fmt.Sprintf("payload(%s)", payload.ID())
+// }
 
 func (payload *ExecutionPayload) ParentID() BlockID {
 	n := uint64(payload.BlockNumber)
@@ -421,6 +437,7 @@ func (envelope *ExecutionPayloadEnvelope) CheckBlockHash() (actual common.Hash, 
 		BlobGasUsed:      (*uint64)(payload.BlobGasUsed),
 		ExcessBlobGas:    (*uint64)(payload.ExcessBlobGas),
 		ParentBeaconRoot: envelope.ParentBeaconBlockRoot,
+		OPContainer:      payload.OPContainer,
 	}
 
 	if payload.WithdrawalsRoot != nil { // Isthmus
