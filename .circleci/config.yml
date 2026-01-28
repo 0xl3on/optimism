@@ -77,6 +77,9 @@ parameters:
   op_reth_dispatch:
     type: boolean
     default: false
+  rust_e2e_dispatch:
+    type: boolean
+    default: false
   github-event-type:
     type: string
     default: "__not_set__"
@@ -159,6 +162,11 @@ workflows:
             op-reth/.* base_image << pipeline.parameters.base_image >> .circleci/continue/op-reth.yml
             op-reth/.* go-cache-version << pipeline.parameters.go-cache-version >> .circleci/continue/op-reth.yml
             op-reth/.* default_docker_image << pipeline.parameters.default_docker_image >> .circleci/continue/rust-ci.yml
+            .* rust_e2e_dispatch << pipeline.parameters.rust_e2e_dispatch >> .circleci/continue/rust-e2e.yml
+            kona/.* default_docker_image << pipeline.parameters.default_docker_image >> .circleci/continue/rust-e2e.yml
+            kona/.* go-cache-version << pipeline.parameters.go-cache-version >> .circleci/continue/rust-e2e.yml
+            op-reth/.* default_docker_image << pipeline.parameters.default_docker_image >> .circleci/continue/rust-e2e.yml
+            op-reth/.* go-cache-version << pipeline.parameters.go-cache-version >> .circleci/continue/rust-e2e.yml
 
   setup-tag:
     when:
